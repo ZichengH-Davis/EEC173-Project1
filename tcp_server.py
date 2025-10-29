@@ -23,4 +23,5 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as a_server_socket:
         data = client_socket.recv(1024)
 
         print(f"Received {data.decode()} from {client_addr}:{client_port}")
-        #client_socket.sendall(b"pong")
+        
+        client_socket.sendall(b"pong")

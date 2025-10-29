@@ -31,9 +31,20 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             client_socket.sendall(b"error")
         else:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as actual_server_socket:
-                server_socket.connect((string_data["server_ip"], string_data["server_port"]))
+                actual_server_socket.connect((string_data["server_ip"], string_data["server_port"]))
        
-                actual_server_socket.sendall("message")
+                actual_server_socket.sendall(string_data["message"].encode('utf-8'))
+                response = actual_server_socket.recv(1024)
+
+                actual_server_socket.close()
+            
+            client_socket.sendall(response)
+
+
+
+
+
+
 
 
         

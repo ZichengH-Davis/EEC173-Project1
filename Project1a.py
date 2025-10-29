@@ -3,7 +3,7 @@ import datetime
 from collections import Counter
 import socket  
 
-pcap_path = "ftp.pcap"
+pcap_path = "SSH.pcap"
 f = open(pcap_path, 'rb')
 pcap = dpkt.pcap.Reader(f)
 
@@ -44,23 +44,37 @@ for timestamp, data in pcap:
     dport = getattr(tcp, 'dport', None)
     ports = {sport, dport}
 
-    if 80 in ports:
-        counts['HTTP'] += 1
-    elif 443 in ports:
-        counts['HTTPS'] += 1
-    elif (20 in ports) or (21 in ports):
-        counts['FTP'] += 1
-    elif 25 in ports:
-        counts['SMTP'] += 1
-    elif 53 in ports:
-        counts['DNS'] += 1
-    elif 443 in ports:
-        counts['QUIC'] += 1
-    elif 5353 in ports:
-        counts['mDNS'] += 1
-    else:
-        counts['Other App'] += 1
-        
+    if isinstance(tcp, dpkt.tcp.TCP):
+        if 80 in ports:
+            counts['HTTP'] += 1
+        elif 443 in ports:
+            counts['HTTPS'] += 1
+        elif (20 in ports) or (21 in ports):
+            counts['FTP'] += 1
+        elif 23 in ports:
+            counts['Telnet'] += 1
+        elif 25 in ports:
+            counts['SMTP'] += 1
+        elif 8080 in ports:
+            counts['HTTP (8080)'] += 1
+        else:
+            counts['Other-App (TCP)'] += 1
+
+    elif isinstance(tcp, dpkt.udp.UDP):
+        if 53 in ports:
+            counts['DNS'] += 1
+        elif 443 in ports:
+            counts['QUIC'] += 1
+        elif 67 in ports or 68 in ports:
+            counts['DHCP'] += 1
+        elif 123 in ports:
+            counts['NTP'] += 1
+        elif 5353 in ports:
+            counts['mDNS'] += 1
+        elif 5060 in ports or 5004 in ports:
+            counts['SIP/RTP'] += 1
+        else:
+            counts['Other-App (UDP)'] += 1
 
 
 
