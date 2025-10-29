@@ -56,10 +56,6 @@ for timestamp, data in pcap:
         counts['DNS'] += 1
     elif 443 in ports:
         counts['QUIC'] += 1
-    elif 67 in ports or 68 in ports:
-        counts['DHCP'] += 1
-    elif 123 in ports:
-        counts['NTP'] += 1
     elif 5353 in ports:
         counts['mDNS'] += 1
     else:
