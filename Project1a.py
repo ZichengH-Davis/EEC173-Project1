@@ -3,12 +3,13 @@ import datetime
 from collections import Counter
 import socket  
 
-pcap_path = "ftp.pcap"
+pcap_path = "google.pcap"
 f = open(pcap_path, 'rb')
 pcap = dpkt.pcap.Reader(f)
 
 counts = Counter() 
 dest_list = [] 
+seen_ips = set() #for recording which ip have been seen
 
 for timestamp, data in pcap:
     ts = datetime.datetime.fromtimestamp(timestamp, datetime.UTC)
@@ -23,6 +24,9 @@ for timestamp, data in pcap:
 
     if isinstance(ip, dpkt.ip.IP):
         ip_addr = socket.inet_ntoa(ip.dst) 
+
+    if ip_addr not in seen_ips:
+        seen_ips.add(ip_addr)
         tstamp = ts.strftime("%H:%M:%S.%f")
         dest_list.append((tstamp, ip_addr))
 
