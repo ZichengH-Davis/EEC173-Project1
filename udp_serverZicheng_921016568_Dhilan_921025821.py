@@ -32,6 +32,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
     kb_per_sec = bytes_per_sec / 1024 
     result_msg = f"{kb_per_sec} kB/s"
 
-    server_socket.sendto(result_msg.encode('utf-8'), addr)
+    server_socket.sendto(result_msg.encode(), addr)
 
     
