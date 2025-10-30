@@ -3,7 +3,7 @@ import datetime
 from collections import Counter
 import socket  
 
-pcap_path = "SSH.pcap"
+pcap_path = "ftp.pcap"
 f = open(pcap_path, 'rb')
 pcap = dpkt.pcap.Reader(f)
 
@@ -22,9 +22,9 @@ for timestamp, data in pcap:
     ip = eth.data
 
     if isinstance(ip, dpkt.ip.IP):
-        dst_ip_str = socket.inet_ntoa(ip.dst) 
-        ts_str = ts.strftime("%H:%M:%S.%f")
-        dest_list.append((ts_str, dst_ip_str))
+        ip_addr = socket.inet_ntoa(ip.dst) 
+        tstamp = ts.strftime("%H:%M:%S.%f")
+        dest_list.append((tstamp, ip_addr))
 
 
     # If it's ICMP, (we need it for ping google)
@@ -35,46 +35,31 @@ for timestamp, data in pcap:
     if not isinstance(ip.data, dpkt.tcp.TCP) and not isinstance(ip.data, dpkt.udp.UDP):
         continue
 
-    tcp = ip.data  
-    # do not proceed if there is no application layer data
-    if not len(tcp.data) > 0:
+    transport_layer = ip.data  
+    # do not proceed if there is no transport_layerlication layer data
+    if not len(transport_layer.data) > 0:
         continue
 
-    sport = getattr(tcp, 'sport', None)
-    dport = getattr(tcp, 'dport', None)
-    ports = {sport, dport}
+    is_tcp = isinstance(transport_layer, dpkt.tcp.TCP)
+    is_udp = isinstance(transport_layer, dpkt.udp.UDP)
 
-    if isinstance(tcp, dpkt.tcp.TCP):
-        if 80 in ports:
-            counts['HTTP'] += 1
-        elif 443 in ports:
-            counts['HTTPS'] += 1
-        elif (20 in ports) or (21 in ports):
-            counts['FTP'] += 1
-        elif 23 in ports:
-            counts['Telnet'] += 1
-        elif 25 in ports:
-            counts['SMTP'] += 1
-        elif 8080 in ports:
-            counts['HTTP (8080)'] += 1
-        else:
-            counts['Other-App (TCP)'] += 1
-
-    elif isinstance(tcp, dpkt.udp.UDP):
-        if 53 in ports:
-            counts['DNS'] += 1
-        elif 443 in ports:
-            counts['QUIC'] += 1
-        elif 67 in ports or 68 in ports:
-            counts['DHCP'] += 1
-        elif 123 in ports:
-            counts['NTP'] += 1
-        elif 5353 in ports:
-            counts['mDNS'] += 1
-        elif 5060 in ports or 5004 in ports:
-            counts['SIP/RTP'] += 1
-        else:
-            counts['Other-App (UDP)'] += 1
+    if is_tcp and (transport_layer.dport == 80 or transport_layer.sport == 80):
+        counts["HTTP"] += 1
+    elif is_tcp and (transport_layer.dport == 443 or transport_layer.sport == 443):
+        counts['HTTPS'] += 1
+    elif is_udp and (transport_layer.dport == 443 or transport_layer.sport == 443):
+        counts['QUIC'] += 1
+    elif is_tcp and (transport_layer.dport == 20 or transport_layer.sport == 20 or transport_layer.dport == 21 or transport_layer.sport == 21):
+        counts['FTP'] += 1
+    elif is_tcp and (transport_layer.dport == 25 or transport_layer.sport == 25):
+        counts['SMTP'] += 1
+    elif transport_layer.dport == 53 or transport_layer.sport == 53:
+        counts['DNS'] += 1
+    elif is_udp and (transport_layer.dport == 5353 or transport_layer.sport == 5353):
+        counts['mDNS'] += 1
+    else:
+        counts['Other App'] += 1
+        
 
 
 
